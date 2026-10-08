@@ -1,987 +1,692 @@
-const API_URL = "https://license-api.amyratfy8.workers.dev";
-const JWT_KEY = "admin_jwt";
-const REQUEST_TIMEOUT = 12000;
+const API_URL="https://license-api.amyratfy8.workers.dev";
+const JWT_KEY="admin_jwt";
+const TIMEOUT=12000;
 
-
-/* =========================================================
-   AUTH
-========================================================= */
-
-function getJWT() {
-    return sessionStorage.getItem(JWT_KEY);
+function getJWT(){
+  return sessionStorage.getItem(JWT_KEY);
 }
 
-function setJWT(token) {
-    sessionStorage.setItem(JWT_KEY, token);
+function setJWT(t){
+  sessionStorage.setItem(JWT_KEY,t);
 }
 
-function clearJWT() {
-    sessionStorage.removeItem(JWT_KEY);
+function clearJWT(){
+  sessionStorage.removeItem(JWT_KEY);
 }
 
+async function api(path,options={}){
 
-/* =========================================================
-   API
-========================================================= */
+  const controller=new AbortController();
 
-async function api(path, options = {}) {
+  const timer=setTimeout(
+    ()=>controller.abort(),
+    TIMEOUT
+  );
 
-    const controller = new AbortController();
+  const headers={
+    "Content-Type":"application/json",
+    ...(options.headers||{})
+  };
 
-    const timeout = setTimeout(() => {
-        controller.abort();
-    }, REQUEST_TIMEOUT);
+  const jwt=getJWT();
 
-    const headers = {
-        "Content-Type": "application/json",
-        ...(options.headers || {})
-    };
+  if(jwt){
+    headers.Authorization="Bearer "+jwt;
+  }
 
-    const jwt = getJWT();
+  try{
 
-    if (jwt) {
-        headers["Authorization"] = `Bearer ${jwt}`;
+    const response=await fetch(
+      API_URL+path,
+      {
+        ...options,
+        headers,
+        signal:controller.signal,
+        cache:"no-store"
+      }
+    );
+
+    const text=await response.text();
+
+    let data;
+
+    try{
+      data=text?JSON.parse(text):{};
+    }catch{
+      data={ok:response.ok,raw:text};
     }
 
-    try {
-
-        const response = await fetch(
-            API_URL + path,
-            {
-                ...options,
-                headers,
-                signal: controller.signal
-            }
-        );
-
-        const text = await response.text();
-
-        let data;
-
-        try {
-            data = text ? JSON.parse(text) : {};
-        } catch {
-            data = {
-                ok: response.ok,
-                raw: text
-            };
-        }
-
-        if (!response.ok) {
-
-            const errorMessage =
-                data?.error ||
-                data?.message ||
-                data?.raw ||
-                `HTTP ${response.status}`;
-
-            throw new Error(errorMessage);
-        }
-
-        return data;
-
-    } catch (error) {
-
-        if (error.name === "AbortError") {
-            throw new Error(
-                "Worker پاسخ نداد و درخواست Timeout شد.\n" +
-                "Worker URL:\n" +
-                API_URL
-            );
-        }
-
-        if (
-            error instanceof TypeError ||
-            String(error.message || "").toLowerCase().includes("fetch")
-        ) {
-            throw new Error(
-                "اتصال به Worker برقرار نشد.\n" +
-                "ممکن است مشکل CORS یا URL Worker باشد.\n\n" +
-                "Worker URL:\n" +
-                API_URL
-            );
-        }
-
-        throw error;
-
-    } finally {
-        clearTimeout(timeout);
+    if(!response.ok){
+      throw new Error(
+        data?.error||
+        data?.message||
+        data?.raw||
+        "HTTP "+response.status
+      );
     }
+
+    return data;
+
+  }catch(e){
+
+    if(e.name==="AbortError"){
+      throw new Error(
+        "Worker پاسخ نداد و Timeout شد."
+      );
+    }
+
+    if(e instanceof TypeError){
+      throw new Error(
+        "اتصال به Worker برقرار نشد؛ CORS یا URL را بررسی کن."
+      );
+    }
+
+    throw e;
+
+  }finally{
+    clearTimeout(timer);
+  }
 }
 
 
-/* =========================================================
-   LOGIN PAGE
-========================================================= */
+/* LOGIN */
 
-async function login(event) {
+async function login(event){
 
-    event.preventDefault();
+  event.preventDefault();
 
-    const passwordInput =
-        document.getElementById("password");
+  const input=
+    document.getElementById("password");
 
-    const loginButton =
-        document.getElementById("loginButton");
+  const button=
+    document.getElementById("loginButton");
 
-    const message =
-        document.getElementById("loginMessage");
+  const message=
+    document.getElementById("loginMessage");
 
-    if (!passwordInput || !loginButton || !message) {
-        return;
+  const password=input.value;
+
+  if(!password){
+    message.textContent=
+      "رمز عبور را وارد کنید.";
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent="در حال ورود...";
+  message.style.color="#8fa3b8";
+  message.textContent=
+    "در حال اتصال به Worker...";
+
+  try{
+
+    const result=await api(
+      "/admin/login",
+      {
+        method:"POST",
+        body:JSON.stringify({password})
+      }
+    );
+
+    if(!result.ok){
+      throw new Error(
+        result.error||"Login failed."
+      );
     }
 
-    const password =
-        passwordInput.value.trim();
-
-    if (!password) {
-        message.style.color = "#ff6b6b";
-        message.textContent =
-            "رمز عبور را وارد کنید.";
-        return;
+    if(!result.token){
+      throw new Error(
+        "JWT دریافت نشد."
+      );
     }
 
-    loginButton.disabled = true;
-    loginButton.textContent = "در حال ورود...";
+    setJWT(result.token);
 
-    message.style.color = "#7f8ea3";
-    message.textContent =
-        "در حال اتصال به Worker...";
+    message.style.color="#21c77a";
+    message.textContent=
+      "ورود موفق بود...";
 
-    try {
+    window.location.replace(
+      "dashboard.html?v="+Date.now()
+    );
 
-        const result = await api(
-            "/admin/login",
-            {
-                method: "POST",
-                body: JSON.stringify({
-                    password: password
-                })
-            }
-        );
-
-        console.log("LOGIN RESPONSE:", result);
-
-        if (!result || result.ok !== true) {
-
-            throw new Error(
-                result?.error ||
-                "ورود انجام نشد."
-            );
-        }
-
-        if (!result.token) {
-
-            throw new Error(
-                "Worker لاگین را قبول کرد ولی JWT برنگرداند."
-            );
-        }
-
-        setJWT(result.token);
-
-        message.style.color = "#21c77a";
-        message.textContent =
-            "ورود موفق بود. در حال باز کردن داشبورد...";
-
-        setTimeout(() => {
-            window.location.href = "dashboard.html";
-        }, 300);
-
-    } catch (error) {
-
-        console.error("LOGIN ERROR:", error);
-
-        clearJWT();
-
-        message.style.color = "#ff6b6b";
-
-        message.textContent =
-            error.message ||
-            "خطای ناشناخته در ورود.";
-
-    } finally {
-
-        loginButton.disabled = false;
-        loginButton.textContent = "Login";
-    }
-}
-
-
-/* =========================================================
-   DASHBOARD AUTH CHECK
-========================================================= */
-
-function requireAuth() {
-
-    if (!getJWT()) {
-
-        window.location.href =
-            "index.html";
-
-        return false;
-    }
-
-    return true;
-}
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-function logout() {
+  }catch(e){
 
     clearJWT();
 
-    window.location.href =
-        "index.html";
+    message.style.color="#ff6b6b";
+    message.textContent=
+      e.message||"خطای ورود";
+
+  }finally{
+
+    button.disabled=false;
+    button.textContent="Login";
+  }
 }
 
 
-/* =========================================================
-   SECTION NAVIGATION
-========================================================= */
+/* AUTH */
 
-function showSection(name) {
+function requireAuth(){
 
-    const sections = [
-        "dashboard",
-        "licenses",
-        "content",
-        "logs"
-    ];
+  if(!getJWT()){
+    location.replace(
+      "index.html?v="+Date.now()
+    );
+    return false;
+  }
 
-    for (const section of sections) {
+  return true;
+}
 
-        const element =
-            document.getElementById(
-                "section-" + section
-            );
+function logout(){
 
-        if (!element) {
-            continue;
-        }
+  clearJWT();
 
-        if (section === name) {
-            element.classList.remove("hidden");
-        } else {
-            element.classList.add("hidden");
-        }
-    }
-
-    if (name === "dashboard") {
-        loadStats();
-    }
-
-    if (name === "licenses") {
-        loadLicenses();
-    }
-
-    if (name === "logs") {
-        loadLogs();
-    }
+  location.replace(
+    "index.html?v="+Date.now()
+  );
 }
 
 
-/* =========================================================
-   STATS
-========================================================= */
+/* SECTIONS */
 
-async function loadStats() {
+function showSection(name){
 
-    try {
+  for(const n of [
+    "dashboard",
+    "licenses",
+    "content",
+    "logs"
+  ]){
 
-        const result =
-            await api(
-                "/admin/list-licenses",
-                {
-                    method: "POST",
-                    body: JSON.stringify({})
-                }
-            );
+    const el=
+      document.getElementById(
+        "section-"+n
+      );
 
-        const licenses =
-            Array.isArray(result)
-                ? result
-                : (
-                    Array.isArray(result?.licenses)
-                        ? result.licenses
-                        : []
-                );
+    if(!el)continue;
 
-        const now =
-            Math.floor(Date.now() / 1000);
+    el.classList.toggle(
+      "hidden",
+      n!==name
+    );
+  }
 
-        let active = 0;
-        let expired = 0;
-
-        for (const license of licenses) {
-
-            const isActive =
-                Number(license.is_active) === 1;
-
-            const expiresAt =
-                Number(license.expires_at || 0);
-
-            if (!isActive) {
-                continue;
-            }
-
-            if (
-                expiresAt > 0 &&
-                expiresAt < now
-            ) {
-                expired++;
-            } else {
-                active++;
-            }
-        }
-
-        const totalElement =
-            document.getElementById("statTotal");
-
-        const activeElement =
-            document.getElementById("statActive");
-
-        const expiredElement =
-            document.getElementById("statExpired");
-
-        if (totalElement) {
-            totalElement.textContent =
-                licenses.length;
-        }
-
-        if (activeElement) {
-            activeElement.textContent =
-                active;
-        }
-
-        if (expiredElement) {
-            expiredElement.textContent =
-                expired;
-        }
-
-    } catch (error) {
-
-        console.error(
-            "STATS ERROR:",
-            error
-        );
-    }
+  if(name==="dashboard")loadStats();
+  if(name==="licenses")loadLicenses();
+  if(name==="logs")loadLogs();
 }
 
 
-/* =========================================================
-   LICENSE LIST
-========================================================= */
+/* STATS */
 
-async function loadLicenses() {
+async function loadStats(){
 
-    const table =
-        document.getElementById("licensesTable");
+  try{
 
-    if (!table) {
-        return;
+    const result=await api(
+      "/admin/list-licenses",
+      {
+        method:"POST",
+        body:"{}"
+      }
+    );
+
+    const list=
+      Array.isArray(result)
+        ? result
+        : result.licenses||[];
+
+    const now=
+      Math.floor(Date.now()/1000);
+
+    let active=0;
+    let expired=0;
+
+    for(const x of list){
+
+      if(Number(x.is_active)!==1)
+        continue;
+
+      if(
+        Number(x.expires_at)>0 &&
+        Number(x.expires_at)<now
+      ){
+        expired++;
+      }else{
+        active++;
+      }
     }
 
-    table.innerHTML =
-        "<tr><td colspan='8'>در حال دریافت...</td></tr>";
+    const a=document.getElementById("statActive");
+    const t=document.getElementById("statTotal");
+    const e=document.getElementById("statExpired");
 
-    try {
+    if(a)a.textContent=active;
+    if(t)t.textContent=list.length;
+    if(e)e.textContent=expired;
 
-        const result =
-            await api(
-                "/admin/list-licenses",
-                {
-                    method: "POST",
-                    body: JSON.stringify({})
-                }
-            );
-
-        const licenses =
-            Array.isArray(result)
-                ? result
-                : (
-                    Array.isArray(result?.licenses)
-                        ? result.licenses
-                        : []
-                );
-
-        table.innerHTML = "";
-
-        if (!licenses.length) {
-
-            table.innerHTML =
-                "<tr><td colspan='8'>هیچ لایسنسی وجود ندارد.</td></tr>";
-
-            return;
-        }
-
-        for (const license of licenses) {
-
-            const tr =
-                document.createElement("tr");
-
-            const expires =
-                Number(license.expires_at || 0);
-
-            const expiresText =
-                expires === 0
-                    ? "بدون انقضا"
-                    : new Date(
-                        expires * 1000
-                    ).toLocaleString();
-
-            let status;
-
-            if (Number(license.is_active) !== 1) {
-                status = "غیرفعال";
-            } else if (
-                expires > 0 &&
-                expires < Math.floor(Date.now() / 1000)
-            ) {
-                status = "منقضی";
-            } else {
-                status = "فعال";
-            }
-
-            tr.innerHTML = `
-                <td>${escapeHTML(license.id)}</td>
-
-                <td>
-                    <code>
-                        ${escapeHTML(license.token)}
-                    </code>
-                </td>
-
-                <td>
-                    ${escapeHTML(license.owner_name)}
-                </td>
-
-                <td>
-                    ${escapeHTML(status)}
-                </td>
-
-                <td>
-                    ${escapeHTML(expiresText)}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        license.hwid_locked || "آزاد"
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        license.total_requests || 0
-                    )}
-                </td>
-
-                <td>
-                    <button
-                        onclick="revokeLicense('${escapeAttribute(license.token)}')"
-                        class="danger-btn">
-                        لغو
-                    </button>
-                </td>
-            `;
-
-            table.appendChild(tr);
-        }
-
-    } catch (error) {
-
-        console.error(
-            "LICENSE LIST ERROR:",
-            error
-        );
-
-        table.innerHTML =
-            `<tr>
-                <td colspan="8">
-                    ${escapeHTML(error.message)}
-                </td>
-            </tr>`;
-    }
+  }catch(e){
+    console.error(e);
+  }
 }
 
 
-/* =========================================================
-   CREATE LICENSE
-========================================================= */
+/* LICENSES */
 
-async function createLicense(event) {
+async function loadLicenses(){
 
-    event.preventDefault();
+  const table=
+    document.getElementById(
+      "licensesTable"
+    );
 
-    const ownerInput =
-        document.getElementById("ownerName");
+  if(!table)return;
 
-    const expiresInput =
-        document.getElementById("expiresDays");
+  table.innerHTML=
+    "<tr><td colspan='8'>در حال دریافت...</td></tr>";
 
-    const message =
-        document.getElementById("licenseMessage");
+  try{
 
-    if (!ownerInput || !expiresInput || !message) {
-        return;
+    const result=await api(
+      "/admin/list-licenses",
+      {
+        method:"POST",
+        body:"{}"
+      }
+    );
+
+    const list=
+      Array.isArray(result)
+        ? result
+        : result.licenses||[];
+
+    table.innerHTML="";
+
+    if(!list.length){
+
+      table.innerHTML=
+        "<tr><td colspan='8'>لیسنسی وجود ندارد.</td></tr>";
+
+      return;
     }
 
-    const owner_name =
-        ownerInput.value.trim();
+    for(const x of list){
 
-    const expires_days =
-        Number(expiresInput.value);
+      const tr=
+        document.createElement("tr");
 
-    if (!owner_name) {
+      const exp=
+        Number(x.expires_at||0);
 
-        message.textContent =
-            "نام مالک را وارد کنید.";
+      const status=
+        Number(x.is_active)!==1
+          ?"غیرفعال"
+          :(
+            exp>0 &&
+            exp<Math.floor(Date.now()/1000)
+              ?"منقضی"
+              :"فعال"
+          );
 
-        return;
+      const expText=
+        exp===0
+          ?"بدون انقضا"
+          :new Date(
+            exp*1000
+          ).toLocaleString();
+
+      tr.innerHTML=`
+<td>${esc(x.id)}</td>
+<td class="token-cell"><code>${esc(x.token)}</code></td>
+<td>${esc(x.owner_name)}</td>
+<td>${esc(status)}</td>
+<td>${esc(expText)}</td>
+<td>${esc(x.hwid_locked||"آزاد")}</td>
+<td>${esc(x.total_requests||0)}</td>
+<td>
+<button class="danger-btn"
+onclick="revokeLicense('${attr(x.token)}')">
+لغو
+</button>
+</td>`;
+
+      table.appendChild(tr);
     }
 
-    try {
+  }catch(e){
 
-        message.textContent =
-            "در حال ساخت لایسنس...";
-
-        const result =
-            await api(
-                "/admin/create-license",
-                {
-                    method: "POST",
-
-                    body: JSON.stringify({
-                        owner_name,
-                        expires_days
-                    })
-                }
-            );
-
-        message.style.color =
-            "#21c77a";
-
-        message.textContent =
-            "لایسنس ساخته شد: " +
-            (result.token || "نامشخص");
-
-        ownerInput.value = "";
-
-        await loadLicenses();
-        await loadStats();
-
-    } catch (error) {
-
-        console.error(
-            "CREATE LICENSE ERROR:",
-            error
-        );
-
-        message.style.color =
-            "#ff6b6b";
-
-        message.textContent =
-            error.message;
-    }
+    table.innerHTML=
+      "<tr><td colspan='8'>"+
+      esc(e.message)+
+      "</td></tr>";
+  }
 }
 
 
-/* =========================================================
-   REVOKE LICENSE
-========================================================= */
+/* CREATE LICENSE */
 
-async function revokeLicense(token) {
+async function createLicense(event){
 
-    if (!confirm(
-        "این لایسنس غیرفعال شود؟"
-    )) {
-        return;
-    }
+  event.preventDefault();
 
-    try {
+  const owner=
+    document.getElementById("ownerName");
 
-        await api(
-            "/admin/revoke-license",
-            {
-                method: "POST",
+  const days=
+    document.getElementById("expiresDays");
 
-                body: JSON.stringify({
-                    token
-                })
-            }
-        );
+  const message=
+    document.getElementById(
+      "licenseMessage"
+    );
 
-        await loadLicenses();
-        await loadStats();
+  try{
 
-    } catch (error) {
+    message.style.color="#8fa3b8";
+    message.textContent=
+      "در حال ساخت...";
 
-        alert(
-            "خطا:\n" +
-            error.message
-        );
-    }
-}
+    const result=await api(
+      "/admin/create-license",
+      {
+        method:"POST",
+        body:JSON.stringify({
+          owner_name:owner.value.trim(),
+          expires_days:Number(days.value)
+        })
+      }
+    );
 
+    message.style.color="#21c77a";
+    message.textContent=
+      "ساخته شد:\n"+
+      result.token;
 
-/* =========================================================
-   CONTENT
-========================================================= */
+    owner.value="";
 
-async function loadContent() {
-
-    const keyInput =
-        document.getElementById("contentKey");
-
-    const editor =
-        document.getElementById("contentEditor");
-
-    const message =
-        document.getElementById("contentMessage");
-
-    if (!keyInput || !editor || !message) {
-        return;
-    }
-
-    const key_name =
-        keyInput.value.trim();
-
-    if (!key_name) {
-
-        message.textContent =
-            "کلید محتوا را وارد کنید.";
-
-        return;
-    }
-
-    try {
-
-        message.style.color =
-            "#7f8ea3";
-
-        message.textContent =
-            "در حال دریافت محتوا...";
-
-        const result =
-            await api(
-                "/admin/get-content",
-                {
-                    method: "POST",
-
-                    body: JSON.stringify({
-                        key_name
-                    })
-                }
-            );
-
-        const content =
-            typeof result === "string"
-                ? result
-                : (
-                    result?.content || ""
-                );
-
-        editor.value =
-            content;
-
-        message.style.color =
-            "#21c77a";
-
-        message.textContent =
-            "محتوا دریافت شد.";
-
-    } catch (error) {
-
-        console.error(
-            "LOAD CONTENT ERROR:",
-            error
-        );
-
-        message.style.color =
-            "#ff6b6b";
-
-        message.textContent =
-            error.message;
-    }
-}
-
-
-async function saveContent() {
-
-    const keyInput =
-        document.getElementById("contentKey");
-
-    const editor =
-        document.getElementById("contentEditor");
-
-    const message =
-        document.getElementById("contentMessage");
-
-    if (!keyInput || !editor || !message) {
-        return;
-    }
-
-    const key_name =
-        keyInput.value.trim();
-
-    const content =
-        editor.value;
-
-    if (!key_name) {
-
-        message.textContent =
-            "کلید محتوا را وارد کنید.";
-
-        return;
-    }
-
-    try {
-
-        message.style.color =
-            "#7f8ea3";
-
-        message.textContent =
-            "در حال ذخیره...";
-
-        await api(
-            "/admin/update-content",
-            {
-                method: "POST",
-
-                body: JSON.stringify({
-                    key_name,
-                    content
-                })
-            }
-        );
-
-        message.style.color =
-            "#21c77a";
-
-        message.textContent =
-            "محتوا با موفقیت ذخیره شد.";
-
-    } catch (error) {
-
-        console.error(
-            "SAVE CONTENT ERROR:",
-            error
-        );
-
-        message.style.color =
-            "#ff6b6b";
-
-        message.textContent =
-            error.message;
-    }
-}
-
-
-/* =========================================================
-   LOGS
-========================================================= */
-
-async function loadLogs() {
-
-    const table =
-        document.getElementById("logsTable");
-
-    if (!table) {
-        return;
-    }
-
-    table.innerHTML =
-        "<tr><td colspan='6'>در حال دریافت...</td></tr>";
-
-    try {
-
-        const result =
-            await api(
-                "/admin/logs",
-                {
-                    method: "POST",
-
-                    body: JSON.stringify({
-                        count: 100
-                    })
-                }
-            );
-
-        const logs =
-            Array.isArray(result)
-                ? result
-                : (
-                    Array.isArray(result?.logs)
-                        ? result.logs
-                        : []
-                );
-
-        table.innerHTML = "";
-
-        if (!logs.length) {
-
-            table.innerHTML =
-                "<tr><td colspan='6'>لاگی وجود ندارد.</td></tr>";
-
-        } else {
-
-            for (const log of logs) {
-
-                const tr =
-                    document.createElement("tr");
-
-                const timestamp =
-                    Number(log.timestamp || 0);
-
-                const timeText =
-                    timestamp
-                        ? new Date(
-                            timestamp * 1000
-                        ).toLocaleString()
-                        : "-";
-
-                tr.innerHTML = `
-                    <td>${escapeHTML(log.id)}</td>
-
-                    <td>
-                        ${escapeHTML(log.token || "-")}
-                    </td>
-
-                    <td>
-                        ${escapeHTML(log.ip || "-")}
-                    </td>
-
-                    <td>
-                        ${escapeHTML(log.action || "-")}
-                    </td>
-
-                    <td>
-                        ${escapeHTML(timeText)}
-                    </td>
-
-                    <td>
-                        ${escapeHTML(
-                            log.user_agent || "-"
-                        )}
-                    </td>
-                `;
-
-                table.appendChild(tr);
-            }
-        }
-
-        const statLogs =
-            document.getElementById("statLogs");
-
-        if (statLogs) {
-            statLogs.textContent =
-                logs.length;
-        }
-
-    } catch (error) {
-
-        console.error(
-            "LOGS ERROR:",
-            error
-        );
-
-        table.innerHTML =
-            `<tr>
-                <td colspan="6">
-                    ${escapeHTML(error.message)}
-                </td>
-            </tr>`;
-    }
-}
-
-
-/* =========================================================
-   LOAD EVERYTHING
-========================================================= */
-
-async function loadAll() {
-
-    await loadStats();
     await loadLicenses();
-    await loadLogs();
+    await loadStats();
+
+  }catch(e){
+
+    message.style.color="#ff4d6d";
+    message.textContent=e.message;
+  }
 }
 
 
-/* =========================================================
-   SECURITY HELPERS
-========================================================= */
+/* REVOKE */
 
-function escapeHTML(value) {
+async function revokeLicense(token){
 
-    const div =
-        document.createElement("div");
+  if(!confirm("این لایسنس غیرفعال شود؟"))
+    return;
 
-    div.textContent =
-        String(value ?? "");
+  try{
 
-    return div.innerHTML;
+    await api(
+      "/admin/revoke-license",
+      {
+        method:"POST",
+        body:JSON.stringify({token})
+      }
+    );
+
+    await loadLicenses();
+    await loadStats();
+
+  }catch(e){
+
+    alert(e.message);
+  }
 }
 
 
-function escapeAttribute(value) {
+/* CONTENT */
 
-    return String(value ?? "")
-        .replace(/\\/g, "\\\\")
-        .replace(/'/g, "\\'");
+async function loadContent(){
+
+  const key=
+    document.getElementById(
+      "contentKey"
+    ).value.trim();
+
+  const editor=
+    document.getElementById(
+      "contentEditor"
+    );
+
+  const message=
+    document.getElementById(
+      "contentMessage"
+    );
+
+  try{
+
+    message.textContent=
+      "در حال دریافت...";
+
+    const result=await api(
+      "/admin/get-content",
+      {
+        method:"POST",
+        body:JSON.stringify({
+          key_name:key
+        })
+      }
+    );
+
+    editor.value=result.content||"";
+
+    message.style.color="#21c77a";
+    message.textContent=
+      "محتوا دریافت شد.";
+
+  }catch(e){
+
+    message.style.color="#ff4d6d";
+    message.textContent=e.message;
+  }
+}
+
+async function saveContent(){
+
+  const key=
+    document.getElementById(
+      "contentKey"
+    ).value.trim();
+
+  const content=
+    document.getElementById(
+      "contentEditor"
+    ).value;
+
+  const message=
+    document.getElementById(
+      "contentMessage"
+    );
+
+  try{
+
+    message.textContent=
+      "در حال ذخیره...";
+
+    await api(
+      "/admin/update-content",
+      {
+        method:"POST",
+        body:JSON.stringify({
+          key_name:key,
+          content
+        })
+      }
+    );
+
+    message.style.color="#21c77a";
+    message.textContent=
+      "محتوا ذخیره شد.";
+
+  }catch(e){
+
+    message.style.color="#ff4d6d";
+    message.textContent=e.message;
+  }
 }
 
 
-/* =========================================================
-   PAGE START
-========================================================= */
+/* LOGS */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+async function loadLogs(){
 
-        const loginForm =
-            document.getElementById("loginForm");
+  const table=
+    document.getElementById(
+      "logsTable"
+    );
 
-        if (loginForm) {
+  if(!table)return;
 
-            loginForm.addEventListener(
-                "submit",
-                login
-            );
+  try{
 
-            return;
-        }
+    const result=await api(
+      "/admin/logs",
+      {
+        method:"POST",
+        body:JSON.stringify({
+          count:100
+        })
+      }
+    );
 
+    const list=
+      Array.isArray(result)
+        ?result
+        :result.logs||[];
 
-        const dashboard =
-            document.getElementById(
-                "section-dashboard"
-            );
+    table.innerHTML="";
 
-        if (dashboard) {
+    for(const x of list){
 
-            if (!requireAuth()) {
-                return;
-            }
+      const tr=
+        document.createElement("tr");
 
-            showSection("dashboard");
+      const time=
+        x.timestamp
+          ?new Date(
+            Number(x.timestamp)*1000
+          ).toLocaleString()
+          :"-";
 
-            const createForm =
-                document.getElementById(
-                    "createLicenseForm"
-                );
+      tr.innerHTML=`
+<td>${esc(x.id)}</td>
+<td>${esc(x.token||"-")}</td>
+<td>${esc(x.ip||"-")}</td>
+<td>${esc(x.action||"-")}</td>
+<td>${esc(time)}</td>
+<td>${esc(x.user_agent||"-")}</td>`;
 
-            if (createForm) {
-
-                createForm.addEventListener(
-                    "submit",
-                    createLicense
-                );
-            }
-
-            loadAll();
-        }
+      table.appendChild(tr);
     }
-);
+
+    const n=
+      document.getElementById(
+        "statLogs"
+      );
+
+    if(n)n.textContent=list.length;
+
+  }catch(e){
+
+    table.innerHTML=
+      "<tr><td colspan='6'>"+
+      esc(e.message)+
+      "</td></tr>";
+  }
+}
+
+
+/* ALL */
+
+async function loadAll(){
+  await loadStats();
+  await loadLicenses();
+  await loadLogs();
+}
+
+
+/* HELPERS */
+
+function esc(v){
+
+  const d=
+    document.createElement("div");
+
+  d.textContent=String(v??"");
+
+  return d.innerHTML;
+}
+
+function attr(v){
+
+  return String(v??"")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'");
+}
+
+
+/* INIT */
+
+function init(){
+
+  const loginForm=
+    document.getElementById(
+      "loginForm"
+    );
+
+  if(loginForm){
+
+    loginForm.addEventListener(
+      "submit",
+      login
+    );
+
+    return;
+  }
+
+  const dashboard=
+    document.getElementById(
+      "section-dashboard"
+    );
+
+  if(dashboard){
+
+    if(!requireAuth())
+      return;
+
+    const form=
+      document.getElementById(
+        "createLicenseForm"
+      );
+
+    if(form){
+      form.addEventListener(
+        "submit",
+        createLicense
+      );
+    }
+
+    showSection("dashboard");
+    loadAll();
+  }
+}
+
+if(document.readyState==="loading"){
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
+}else{
+  init();
+}
