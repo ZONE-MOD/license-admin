@@ -1,5 +1,5 @@
 const API_URL =
-    "https://YOUR-WORKER.workers.dev";
+    "https://license-api.amyratfy8.workers.dev";
 
 
 /* =========================================================
