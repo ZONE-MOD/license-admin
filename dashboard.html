@@ -1,322 +1,1255 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
 
-    <title>License Admin Dashboard</title>
+<meta
+  http-equiv="Cache-Control"
+  content="no-cache,no-store,must-revalidate"
+>
 
-    <link rel="stylesheet"
-          href="styles.css">
+<meta
+  http-equiv="Pragma"
+  content="no-cache"
+>
+
+<meta
+  http-equiv="Expires"
+  content="0"
+>
+
+<title>License Admin Dashboard</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  margin:0;
+  padding:0;
+  min-height:100%;
+}
+
+body{
+  background:#07111f;
+  color:#e6edf3;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+button,
+input,
+textarea,
+select{
+  font-family:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.hidden{
+  display:none !important;
+}
+
+
+/* =========================
+   LAYOUT
+========================= */
+
+.layout{
+  min-height:100vh;
+  display:flex;
+}
+
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar{
+  width:245px;
+  min-height:100vh;
+  position:fixed;
+  right:0;
+  top:0;
+  bottom:0;
+
+  background:#081522;
+
+  border-left:1px solid #1d344a;
+
+  padding:22px 16px;
+
+  z-index:100;
+}
+
+.brand{
+  padding:5px 8px 22px;
+  border-bottom:1px solid #1a2e40;
+  margin-bottom:18px;
+}
+
+.brand-title{
+  font-size:20px;
+  font-weight:bold;
+}
+
+.brand-sub{
+  margin-top:7px;
+  color:#71869a;
+  font-size:12px;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.nav button{
+  width:100%;
+  text-align:right;
+
+  border:1px solid transparent;
+
+  background:transparent;
+
+  color:#9eb0c2;
+
+  padding:12px 13px;
+
+  border-radius:8px;
+
+  font-size:14px;
+}
+
+.nav button:hover{
+  background:#0d1e2d;
+  color:#fff;
+}
+
+.nav button.active{
+  background:#123d30;
+  border-color:#1d654c;
+  color:#21c77a;
+}
+
+.logout{
+  margin-top:18px;
+
+  width:100%;
+
+  padding:12px;
+
+  background:#28131a;
+
+  border:1px solid #4b222d;
+
+  color:#ff6b6b;
+
+  border-radius:8px;
+
+  font-size:14px;
+}
+
+.logout:hover{
+  background:#351720;
+}
+
+
+/* =========================
+   MAIN
+========================= */
+
+.main{
+  width:calc(100% - 245px);
+  margin-right:245px;
+  padding:26px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  gap:16px;
+
+  margin-bottom:24px;
+}
+
+.page-title{
+  margin:0;
+  font-size:25px;
+}
+
+.page-subtitle{
+  margin-top:7px;
+  color:#71869a;
+  font-size:13px;
+}
+
+
+/* =========================
+   CARDS
+========================= */
+
+.stats{
+  display:grid;
+
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+
+  gap:15px;
+
+  margin-bottom:22px;
+}
+
+.stat-card{
+  padding:20px;
+
+  background:#0d1b2a;
+
+  border:1px solid #1d344a;
+
+  border-radius:12px;
+}
+
+.stat-title{
+  color:#7f93a7;
+  font-size:13px;
+}
+
+.stat-value{
+  margin-top:11px;
+  font-size:28px;
+  font-weight:bold;
+  color:#21c77a;
+}
+
+
+/* =========================
+   SECTIONS
+========================= */
+
+.panel{
+  background:#0d1b2a;
+
+  border:1px solid #1d344a;
+
+  border-radius:12px;
+
+  padding:21px;
+
+  margin-bottom:20px;
+}
+
+.panel-title{
+  margin:0 0 18px;
+
+  font-size:18px;
+}
+
+.panel-description{
+  margin:-8px 0 18px;
+
+  color:#71869a;
+
+  font-size:13px;
+}
+
+
+/* =========================
+   FORMS
+========================= */
+
+.form-grid{
+  display:grid;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap:14px;
+}
+
+.field label{
+  display:block;
+
+  margin-bottom:8px;
+
+  color:#b8c7d5;
+
+  font-size:13px;
+}
+
+input,
+textarea,
+select{
+
+  width:100%;
+
+  background:#081522;
+
+  color:#fff;
+
+  border:1px solid #29445c;
+
+  border-radius:8px;
+
+  outline:none;
+
+  font-size:14px;
+
+}
+
+input,
+select{
+  padding:12px;
+}
+
+textarea{
+  min-height:420px;
+
+  padding:14px;
+
+  resize:vertical;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  direction:ltr;
+
+  text-align:left;
+
+  line-height:1.5;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+  border-color:#21c77a;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(33,199,122,.10);
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn{
+  border:0;
+
+  border-radius:8px;
+
+  padding:11px 17px;
+
+  font-size:14px;
+
+  font-weight:bold;
+
+  margin-top:15px;
+}
+
+.btn-primary{
+  background:#16a765;
+  color:#fff;
+}
+
+.btn-primary:hover{
+  background:#128b55;
+}
+
+.btn-secondary{
+  background:#163149;
+  color:#d8e3ed;
+  border:1px solid #29445c;
+}
+
+.btn-secondary:hover{
+  background:#1b3b57;
+}
+
+.danger-btn{
+  border:1px solid #5b2733;
+
+  background:#2b151c;
+
+  color:#ff6b6b;
+
+  border-radius:6px;
+
+  padding:7px 10px;
+
+  font-size:12px;
+}
+
+.danger-btn:hover{
+  background:#3a1a23;
+}
+
+
+/* =========================
+   MESSAGES
+========================= */
+
+.message{
+  min-height:22px;
+
+  margin-top:14px;
+
+  font-size:13px;
+
+  white-space:pre-wrap;
+
+  word-break:break-word;
+}
+
+
+/* =========================
+   TABLE
+========================= */
+
+.table-wrap{
+  width:100%;
+
+  overflow-x:auto;
+
+  border:1px solid #1d344a;
+
+  border-radius:9px;
+}
+
+table{
+  width:100%;
+
+  border-collapse:collapse;
+
+  min-width:900px;
+}
+
+th,
+td{
+  padding:11px 12px;
+
+  border-bottom:1px solid #172b3d;
+
+  text-align:right;
+
+  vertical-align:middle;
+
+  font-size:12px;
+}
+
+th{
+  background:#091723;
+
+  color:#93a7bb;
+
+  font-weight:bold;
+}
+
+td{
+  color:#cbd6e0;
+}
+
+tr:last-child td{
+  border-bottom:0;
+}
+
+code{
+  direction:ltr;
+
+  unicode-bidi:plaintext;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  color:#21c77a;
+
+  font-size:11px;
+}
+
+.token-cell{
+  max-width:260px;
+
+  word-break:break-all;
+}
+
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.toolbar{
+
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:10px;
+
+  align-items:end;
+
+  margin-bottom:18px;
+}
+
+.toolbar .field{
+  min-width:180px;
+}
+
+.toolbar .small{
+  min-width:130px;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.status{
+  display:inline-block;
+
+  padding:4px 8px;
+
+  border-radius:5px;
+
+  background:#123d30;
+
+  color:#21c77a;
+
+  font-size:11px;
+}
+
+.note{
+  padding:11px 13px;
+
+  background:#0a1926;
+
+  border:1px solid #183146;
+
+  border-radius:8px;
+
+  color:#7f93a7;
+
+  font-size:12px;
+
+  line-height:1.7;
+
+  margin-top:15px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+.mobile-top{
+  display:none;
+}
+
+@media(max-width:900px){
+
+  .sidebar{
+    width:100%;
+
+    min-height:auto;
+
+    position:relative;
+
+    border-left:0;
+
+    border-bottom:1px solid #1d344a;
+
+    padding:12px;
+  }
+
+  .layout{
+    display:block;
+  }
+
+  .main{
+    width:100%;
+
+    margin-right:0;
+
+    padding:16px;
+  }
+
+  .brand{
+    padding-bottom:12px;
+
+    margin-bottom:10px;
+  }
+
+  .nav{
+    display:grid;
+
+    grid-template-columns:
+      repeat(4,minmax(0,1fr));
+  }
+
+  .nav button{
+    text-align:center;
+    padding:10px 5px;
+    font-size:12px;
+  }
+
+  .logout{
+    margin-top:10px;
+  }
+
+  .stats{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:520px){
+
+  .main{
+    padding:12px;
+  }
+
+  .stats{
+    grid-template-columns:1fr 1fr;
+
+    gap:9px;
+  }
+
+  .stat-card{
+    padding:14px;
+  }
+
+  .stat-value{
+    font-size:22px;
+  }
+
+  .panel{
+    padding:15px;
+  }
+
+  .page-title{
+    font-size:21px;
+  }
+
+  .nav{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+}
+
+</style>
 
 </head>
 
 <body>
 
-<header class="topbar">
+<div class="layout">
+
+
+  <!-- =====================
+       SIDEBAR
+  ====================== -->
+
+  <aside class="sidebar">
 
     <div class="brand">
-        LICENSE ADMIN
+
+      <div class="brand-title">
+        License Admin
+      </div>
+
+      <div class="brand-sub">
+        Secure Control Panel
+      </div>
+
     </div>
 
-    <nav>
 
-        <button onclick="showSection('dashboard')">
-            داشبورد
-        </button>
+    <nav class="nav">
 
-        <button onclick="showSection('licenses')">
-            لایسنس‌ها
-        </button>
+      <button
+        type="button"
+        id="navDashboard"
+        class="active"
+        onclick="showSection('dashboard')"
+      >
+        داشبورد
+      </button>
 
-        <button onclick="showSection('content')">
-            محتوا
-        </button>
+      <button
+        type="button"
+        id="navLicenses"
+        onclick="showSection('licenses')"
+      >
+        لایسنس‌ها
+      </button>
 
-        <button onclick="showSection('logs')">
-            لاگ
-        </button>
+      <button
+        type="button"
+        id="navContent"
+        onclick="showSection('content')"
+      >
+        محتوا
+      </button>
 
-        <button onclick="logout()"
-                class="danger-btn">
-            خروج
-        </button>
+      <button
+        type="button"
+        id="navLogs"
+        onclick="showSection('logs')"
+      >
+        لاگ‌ها
+      </button>
 
     </nav>
 
-</header>
+
+    <button
+      type="button"
+      class="logout"
+      onclick="logout()"
+    >
+      خروج
+    </button>
+
+  </aside>
 
 
-<main class="container">
+  <!-- =====================
+       MAIN
+  ====================== -->
+
+  <main class="main">
 
 
-    <!-- DASHBOARD -->
+    <div class="topbar">
 
-    <section id="section-dashboard">
+      <div>
 
-        <div class="section-header">
+        <h1 class="page-title">
+          مدیریت سیستم
+        </h1>
 
-            <h1>
-                داشبورد
-            </h1>
+        <div class="page-subtitle">
+          License & Content Administration
+        </div>
 
-            <button onclick="loadAll()">
-                بروزرسانی
-            </button>
+      </div>
+
+      <div class="status">
+        ADMIN
+      </div>
+
+    </div>
+
+
+    <!-- =====================
+         DASHBOARD
+    ====================== -->
+
+    <section
+      id="section-dashboard"
+    >
+
+      <div class="stats">
+
+        <div class="stat-card">
+
+          <div class="stat-title">
+            کل لایسنس‌ها
+          </div>
+
+          <div
+            id="statTotal"
+            class="stat-value"
+          >
+            0
+          </div>
 
         </div>
 
 
-        <div class="stats-grid">
+        <div class="stat-card">
 
-            <div class="stat-card">
-                <span>فعال</span>
-                <strong id="statActive">0</strong>
-            </div>
+          <div class="stat-title">
+            لایسنس‌های فعال
+          </div>
 
-            <div class="stat-card">
-                <span>کل</span>
-                <strong id="statTotal">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>منقضی</span>
-                <strong id="statExpired">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>لاگ</span>
-                <strong id="statLogs">0</strong>
-            </div>
+          <div
+            id="statActive"
+            class="stat-value"
+          >
+            0
+          </div>
 
         </div>
+
+
+        <div class="stat-card">
+
+          <div class="stat-title">
+            منقضی شده
+          </div>
+
+          <div
+            id="statExpired"
+            class="stat-value"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div class="stat-title">
+            لاگ‌های اخیر
+          </div>
+
+          <div
+            id="statLogs"
+            class="stat-value"
+          >
+            0
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="panel">
+
+        <h2 class="panel-title">
+          وضعیت سیستم
+        </h2>
+
+        <div class="note">
+
+          Worker:
+          <code>
+            license-api.amyratfy8.workers.dev
+          </code>
+
+          <br>
+
+          API:
+          <span>
+            Online / Protected
+          </span>
+
+          <br>
+
+          JWT:
+          <span>
+            2 Hours
+          </span>
+
+          <br>
+
+          Rate Limit:
+          <span>
+            10 Requests / Minute / IP
+          </span>
+
+        </div>
+
+      </div>
 
     </section>
 
 
-    <!-- LICENSES -->
+    <!-- =====================
+         LICENSES
+    ====================== -->
 
-    <section id="section-licenses"
-             class="hidden">
+    <section
+      id="section-licenses"
+      class="hidden"
+    >
 
-        <div class="section-header">
+      <div class="panel">
 
-            <h2>
-                مدیریت لایسنس‌ها
-            </h2>
+        <h2 class="panel-title">
+          ساخت لایسنس جدید
+        </h2>
 
-        </div>
+        <form
+          id="createLicenseForm"
+        >
 
+          <div class="form-grid">
 
-        <div class="panel">
+            <div class="field">
 
-            <h3>
-                ساخت لایسنس جدید
-            </h3>
+              <label for="ownerName">
+                نام مالک
+              </label>
 
-            <form id="createLicenseForm">
-
-                <label>
-                    نام مالک
-                </label>
-
-                <input
-                    id="ownerName"
-                    type="text"
-                    placeholder="مثلاً Ali"
-                    required
-                >
-
-
-                <label>
-                    مدت اعتبار به روز
-                </label>
-
-                <input
-                    id="expiresDays"
-                    type="number"
-                    min="0"
-                    value="30"
-                    required
-                >
-
-                <small>
-                    عدد 0 یعنی بدون انقضا
-                </small>
-
-
-                <button type="submit"
-                        class="primary-btn">
-
-                    ساخت لایسنس
-
-                </button>
-
-            </form>
-
-            <div id="licenseMessage"
-                 class="message">
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <h3>
-                لیست لایسنس‌ها
-            </h3>
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                    <tr>
-                        <th>ID</th>
-                        <th>Token</th>
-                        <th>مالک</th>
-                        <th>وضعیت</th>
-                        <th>انقضا</th>
-                        <th>HWID</th>
-                        <th>درخواست</th>
-                        <th>عملیات</th>
-                    </tr>
-
-                    </thead>
-
-                    <tbody id="licensesTable">
-                    </tbody>
-
-                </table>
+              <input
+                id="ownerName"
+                type="text"
+                placeholder="مثلاً Ali"
+                autocomplete="off"
+                required
+              >
 
             </div>
 
+
+            <div class="field">
+
+              <label for="expiresDays">
+                مدت اعتبار (روز)
+              </label>
+
+              <input
+                id="expiresDays"
+                type="number"
+                min="0"
+                value="30"
+                placeholder="30"
+              >
+
+            </div>
+
+          </div>
+
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+          >
+            ساخت License
+          </button>
+
+
+          <div
+            id="licenseMessage"
+            class="message"
+          ></div>
+
+        </form>
+
+      </div>
+
+
+      <div class="panel">
+
+        <h2 class="panel-title">
+          لیست لایسنس‌ها
+        </h2>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick="loadLicenses();loadStats();"
+        >
+          بروزرسانی
+        </button>
+
+        <div
+          class="table-wrap"
+          style="margin-top:15px"
+        >
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>ID</th>
+
+                <th>Token</th>
+
+                <th>Owner</th>
+
+                <th>Status</th>
+
+                <th>Expires</th>
+
+                <th>HWID</th>
+
+                <th>Requests</th>
+
+                <th>Action</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="licensesTable">
+
+              <tr>
+                <td colspan="8">
+                  در حال دریافت...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
         </div>
+
+      </div>
 
     </section>
 
 
-    <!-- CONTENT -->
+    <!-- =====================
+         CONTENT
+    ====================== -->
 
-    <section id="section-content"
-             class="hidden">
+    <section
+      id="section-content"
+      class="hidden"
+    >
 
-        <div class="section-header">
+      <div class="panel">
 
-            <h2>
-                مدیریت محتوا
-            </h2>
+        <h2 class="panel-title">
+          مدیریت محتوا
+        </h2>
 
+        <div class="panel-description">
+          محتوایی که Client بعد از اعتبارسنجی License دریافت می‌کند.
         </div>
 
 
-        <div class="panel">
+        <div class="toolbar">
 
-            <label>
-                کلید محتوا
+          <div class="field">
+
+            <label for="contentKey">
+              Content Key
             </label>
 
             <input
-                id="contentKey"
-                type="text"
-                value="main"
-                placeholder="main"
+              id="contentKey"
+              type="text"
+              value="main"
+              autocomplete="off"
             >
 
-
-            <button onclick="loadContent()">
-                دریافت محتوا
-            </button>
+          </div>
 
 
-            <label>
-                محتوا
-            </label>
-
-            <textarea
-                id="contentEditor"
-                class="content-editor"
-                placeholder="محتوای متنی را اینجا وارد کنید..."
-            ></textarea>
-
-
-            <button
-                onclick="saveContent()"
-                class="primary-btn">
-
-                ذخیره محتوا
-
-            </button>
-
-
-            <div id="contentMessage"
-                 class="message">
-            </div>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="loadContent()"
+          >
+            دریافت محتوا
+          </button>
 
         </div>
+
+
+        <div class="field">
+
+          <label for="contentEditor">
+            Content
+          </label>
+
+          <textarea
+            id="contentEditor"
+            spellcheck="false"
+            placeholder="محتوای اصلی را اینجا قرار دهید..."
+          ></textarea>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          onclick="saveContent()"
+        >
+          ذخیره محتوا
+        </button>
+
+
+        <div
+          id="contentMessage"
+          class="message"
+        ></div>
+
+
+        <div class="note">
+
+          برای محتوای اصلی از کلید
+          <code>main</code>
+          استفاده کن.
+
+          هر بار ذخیره کردن محتوا، Version افزایش پیدا می‌کند.
+
+        </div>
+
+      </div>
 
     </section>
 
 
-    <!-- LOGS -->
+    <!-- =====================
+         LOGS
+    ====================== -->
 
-    <section id="section-logs"
-             class="hidden">
+    <section
+      id="section-logs"
+      class="hidden"
+    >
 
-        <div class="section-header">
+      <div class="panel">
 
-            <h2>
-                لاگ‌ها
-            </h2>
+        <h2 class="panel-title">
+          System Logs
+        </h2>
 
-            <button onclick="loadLogs()">
-                بروزرسانی
-            </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick="loadLogs()"
+        >
+          بروزرسانی لاگ‌ها
+        </button>
+
+
+        <div
+          class="table-wrap"
+          style="margin-top:15px"
+        >
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>ID</th>
+
+                <th>Token</th>
+
+                <th>IP</th>
+
+                <th>Action</th>
+
+                <th>Time</th>
+
+                <th>User Agent</th>
+
+              </tr>
+
+            </thead>
+
+
+            <tbody id="logsTable">
+
+              <tr>
+
+                <td colspan="6">
+                  در حال دریافت...
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
 
         </div>
 
-
-        <div class="panel">
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                    <tr>
-                        <th>ID</th>
-                        <th>Token</th>
-                        <th>IP</th>
-                        <th>Action</th>
-                        <th>Time</th>
-                        <th>User Agent</th>
-                    </tr>
-
-                    </thead>
-
-                    <tbody id="logsTable">
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
+      </div>
 
     </section>
 
-</main>
+
+  </main>
+
+</div>
 
 
-<script src="app.js"></script>
+<!-- =========================
+     NO-CACHE APP.JS
+========================= -->
+
+<script>
+
+(async function(){
+
+  try{
+
+    if("serviceWorker" in navigator){
+
+      const registrations =
+        await navigator.serviceWorker
+          .getRegistrations();
+
+      await Promise.all(
+        registrations.map(
+          r => r.unregister()
+        )
+      );
+    }
+
+    if("caches" in window){
+
+      const keys =
+        await caches.keys();
+
+      await Promise.all(
+        keys.map(
+          key => caches.delete(key)
+        )
+      );
+    }
+
+  }catch(e){
+
+    console.warn(
+      "Cache cleanup failed:",
+      e
+    );
+
+  }
+
+
+  const script =
+    document.createElement("script");
+
+  script.src =
+    "app.js?v=" +
+    Date.now();
+
+  script.async = false;
+
+  document.body.appendChild(script);
+
+})();
+
+</script>
 
 </body>
-
 </html>
