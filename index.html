@@ -1,58 +1,135 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>License Admin - Login</title>
 
-    <title>License Admin - Login</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-    <link rel="stylesheet"
-          href="styles.css">
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #07111f;
+      color: #e6edf3;
+      font-family: Arial, sans-serif;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      margin: 20px;
+      padding: 30px;
+      background: #0d1b2a;
+      border: 1px solid #1d344a;
+      border-radius: 14px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    .subtitle {
+      margin-bottom: 25px;
+      color: #8fa3b8;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #29445c;
+      border-radius: 8px;
+      background: #081522;
+      color: #fff;
+      outline: none;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: #21c77a;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px;
+      border: 0;
+      border-radius: 8px;
+      background: #16a765;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #128b55;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #loginMessage {
+      min-height: 22px;
+      margin-top: 16px;
+      color: #ff6b6b;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 
-<body class="login-page">
+<body>
 
-    <main class="login-card">
+  <div class="login-box">
+    <h1>License Admin</h1>
 
-        <div class="logo">
-            LICENSE ADMIN
-        </div>
+    <div class="subtitle">
+      Administrator Login
+    </div>
 
-        <h1>ورود مدیر</h1>
+    <form id="loginForm">
 
-        <p class="muted">
-            برای ورود، رمز عبور مدیر را وارد کنید.
-        </p>
+      <label for="password">
+        Admin Password
+      </label>
 
-        <form id="loginForm">
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Enter admin password"
+        required
+      >
 
-            <label for="password">
-                رمز عبور
-            </label>
+      <button id="loginButton" type="submit">
+        Login
+      </button>
 
-            <input
-                id="password"
-                type="password"
-                autocomplete="current-password"
-                placeholder="رمز عبور"
-                required
-            >
+      <div id="loginMessage"></div>
 
-            <button type="submit"
-                    class="primary-btn">
-                ورود
-            </button>
+    </form>
+  </div>
 
-        </form>
-
-        <div id="loginMessage"
-             class="message">
-        </div>
-
-    </main>
-
-    <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 
 </body>
 </html>
