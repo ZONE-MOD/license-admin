@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Zone Mod — Admin Control</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%;background:#050b12;color:#eaf2f8;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+body{overflow-x:hidden}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+:root{
+  --bg:#050b12;
+  --panel:#0a131d;
+  --panel2:#0c1722;
+  --line:#1a2b3b;
+  --line2:#243c52;
+  --text:#eaf2f8;
+  --muted:#7f93a6;
+  --green:#28d58a;
+  --green2:#0fa96a;
+  --red:#ff647c;
+  --yellow:#ffd166;
+  --blue:#56a8ff;
+  --shadow:0 18px 55px rgba(0,0,0,.34);
+}
+
+.layout{min-height:100vh;display:flex}
+.sidebar{width:248px;min-height:100vh;position:fixed;inset:0 auto 0 0;background:linear-gradient(180deg,#07111b 0%,#08131e 100%);border-right:1px solid var(--line);padding:18px 14px;z-index:50}
+.brand{padding:4px 8px 18px;margin-bottom:14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:13px;border:1px solid #31516a;background:radial-gradient(circle at 30% 25%,#173d59 0,#0d2132 52%,#07131e 100%);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 10px 30px rgba(0,0,0,.24)}
+.logo svg{width:24px;height:24px}
+.brand-copy{min-width:0}
+.brand-title{font-size:16px;font-weight:800;letter-spacing:.2px}
+.brand-sub{margin-top:4px;font-size:11px;color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav button,.logout{width:100%;border-radius:10px;padding:11px 12px;border:1px solid transparent;background:transparent;color:#9eb0c1;text-align:right;font-size:13px;transition:.18s ease}
+.nav button:hover{background:#0d1d2a;border-color:#183245;color:#fff}
+.nav button.active{background:linear-gradient(180deg,#0e2b22,#0b211b);border-color:#1b5b44;color:var(--green);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.logout{margin-top:16px;background:#1d1016;border-color:#4c202c;color:var(--red)}
+.logout:hover{background:#29151d}
+
+.main{width:calc(100% - 248px);margin-left:248px;padding:24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+.page-title{margin:0;font-size:25px;letter-spacing:-.3px}
+.page-subtitle{margin-top:5px;color:var(--muted);font-size:12px}
+.status{padding:7px 10px;border-radius:8px;background:#0d2820;border:1px solid #1b5b44;color:var(--green);font-size:11px;letter-spacing:.6px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.stat-card{padding:17px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#0a151f,#09121b);box-shadow:0 8px 25px rgba(0,0,0,.16)}
+.stat-title{color:#8ca0b3;font-size:12px}.stat-value{margin-top:9px;font-size:28px;font-weight:800;color:var(--green)}
+
+.panel{background:linear-gradient(180deg,rgba(11,22,33,.98),rgba(9,18,28,.98));border:1px solid var(--line);border-radius:13px;padding:19px;margin-bottom:18px;box-shadow:0 12px 40px rgba(0,0,0,.12)}
+.panel-title{margin:0 0 15px;font-size:17px}.panel-description{margin:-4px 0 17px;color:var(--muted);font-size:12px;line-height:1.8}
+.note{padding:11px 12px;border:1px solid #183043;border-radius:9px;background:#07121c;color:#7f93a6;font-size:11px;line-height:1.9;margin-top:14px}
+.note code{color:#90f0bf}
+
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.field label{display:block;margin-bottom:7px;color:#c3d0db;font-size:12px}
+input,textarea,select{width:100%;border:1px solid #29445b;background:#07111a;color:#fff;border-radius:9px;outline:none}
+input,select{padding:11px 12px}
+input:focus,select:focus{border-color:#2ccf8d;box-shadow:0 0 0 3px rgba(40,213,138,.08)}
+
+.btn{border-radius:9px;padding:10px 14px;border:1px solid transparent;font-size:12px;font-weight:700;transition:.18s ease}
+.btn-primary{background:linear-gradient(180deg,#1ac579,#109b61);border-color:#26d68f;color:#fff;box-shadow:0 10px 26px rgba(12,154,96,.18)}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-secondary{background:#102131;border-color:#2b4961;color:#d8e4ed}.btn-secondary:hover{background:#153048}
+.btn-ghost{background:#0b1722;border-color:#1d3448;color:#b8c8d6}.btn-ghost:hover{background:#10202e}
+.btn-danger{background:#2a141b;border-color:#5b2734;color:var(--red)}
+
+.message{min-height:20px;margin-top:12px;font-size:12px;white-space:pre-wrap;word-break:break-word}
+
+.table-wrap{width:100%;overflow:auto;border:1px solid var(--line);border-radius:9px}
+table{width:100%;border-collapse:collapse;min-width:920px}
+th,td{padding:10px 11px;border-bottom:1px solid #142739;text-align:right;font-size:11px;vertical-align:middle}th{background:#07111a;color:#91a4b6;font-weight:800}td{color:#d1dce5}tr:last-child td{border-bottom:0}
+code{direction:ltr;unicode-bidi:plaintext;font-family:"JetBrains Mono","Fira Code","Cascadia Code","Courier New",monospace;color:#7ef0b6;font-size:11px}
+.token-cell{max-width:290px;word-break:break-all}
+.token-actions{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;margin-inline-start:8px}
+.copy-btn{border:1px solid #28506c;background:#0d2232;color:#bcd3e3;padding:5px 7px;border-radius:6px;font-size:10px}
+.copy-btn:hover{background:#133149;color:#fff}
+
+.toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:9px;margin-bottom:15px}.toolbar .field{min-width:190px}.toolbar .small{min-width:130px}
+
+.content-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border:1px solid #183246;border-radius:11px;background:#07111a}
+.content-head-main{display:flex;align-items:center;gap:11px;min-width:0}.content-badge{width:34px;height:34px;border-radius:9px;border:1px solid #1d465d;background:#0c2030;display:grid;place-items:center;color:#71c8ff;font-family:monospace;font-size:13px;font-weight:800}
+.content-name{font-weight:800;font-size:13px}.content-sub{margin-top:3px;color:var(--muted);font-size:10px}
+.content-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#9db1c1;font-size:10px}.meta-chip{padding:5px 7px;border:1px solid #1b3348;border-radius:6px;background:#09151f}
+
+.history-list{display:flex;flex-direction:column;gap:8px;margin-top:11px}.history-item{border:1px solid #193247;border-radius:10px;background:#07121c;overflow:hidden}.history-row{display:flex;align-items:center;gap:9px;padding:10px 11px}.history-left{min-width:0;flex:1}.history-title{font-size:11px;font-weight:700}.history-meta{margin-top:3px;font-size:10px;color:var(--muted)}.history-actions{display:flex;gap:6px}.history-actions button{padding:6px 8px;font-size:10px}.history-preview{display:none;border-top:1px solid #173044;padding:10px;background:#050d15}.history-item.open .history-preview{display:block}.history-preview pre{margin:0;max-height:180px;overflow:auto;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-word;color:#b9c7d3;font:10px/1.55 "JetBrains Mono","Fira Code","Courier New",monospace}
+.empty{padding:22px;text-align:center;color:#6f8396;border:1px dashed #21384c;border-radius:9px;background:#07111a;font-size:11px}
+
+/* editor */
+.editor-shell{display:none;position:fixed;inset:0;z-index:1000;background:#04090e}
+.editor-shell.open{display:flex;flex-direction:column}
+.editor-top{height:58px;display:flex;align-items:center;gap:9px;padding:9px 11px;background:#07101a;border-bottom:1px solid #173044;box-shadow:0 6px 20px rgba(0,0,0,.18);direction:ltr}
+.editor-top .top-spacer{flex:1}
+.editor-title{min-width:0;display:flex;align-items:center;gap:8px;color:#dce9f2;font-size:12px;direction:rtl}.editor-title strong{white-space:nowrap}.editor-title span{color:#7d91a4;font-family:monospace;direction:ltr}
+.editor-btn{height:34px;border-radius:8px;border:1px solid #233d52;background:#0a1a27;color:#c8d6e2;padding:0 11px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px}.editor-btn:hover{background:#102638;color:#fff}.editor-save{background:linear-gradient(180deg,#1ac579,#109b61);border-color:#2ad892;color:#fff}.editor-save:hover{filter:brightness(1.06)}
+.editor-main{position:relative;flex:1;min-height:0;background:#050b11;display:flex}.code-wrap{flex:1;min-width:0;direction:ltr}
+.CodeMirror{height:100%;font:13px/1.65 "JetBrains Mono","Fira Code","Cascadia Code","Courier New",monospace;background:#050b11;color:#d9e4ed}.CodeMirror-gutters{background:#070f17;border-right:1px solid #162838}.CodeMirror-linenumber{color:#536a7b}.CodeMirror-cursor{border-left:2px solid #8ad4ff}.CodeMirror-selected{background:rgba(83,168,255,.18)!important}.cm-s-material-darker .CodeMirror-matchingbracket{color:#fff!important;border-bottom:1px solid #56a8ff}
+.cm-s-material-darker .cm-local-keyword{color:var(--yellow)!important;font-weight:700}
+.cm-s-material-darker .cm-comment{color:#647a8c!important}.cm-s-material-darker .cm-string{color:#8fe7bf!important}.cm-s-material-darker .cm-number{color:#82c6ff!important}.cm-s-material-darker .cm-keyword{color:#b797ff!important}.cm-s-material-darker .cm-def{color:#71c8ff!important}
+
+.editor-bottom{min-height:56px;padding:8px 10px;background:#07101a;border-top:1px solid #173044;display:flex;align-items:center;gap:8px;flex-wrap:wrap;direction:ltr}.search-group{display:flex;align-items:center;gap:7px;flex:1;min-width:260px}.search-group input{height:36px;background:#06101a;border-color:#234156;font:11px monospace;direction:ltr;text-align:left}.search-input{flex:1}.replace-input{flex:1}.search-btn{height:36px;padding:0 11px;white-space:nowrap}.editor-status{margin-left:auto;color:#8398aa;font:10px monospace;white-space:nowrap;direction:ltr}.replace-message{position:absolute;bottom:68px;left:12px;padding:7px 9px;border:1px solid #294b61;border-radius:7px;background:#081521;color:#b8cad7;font-size:10px;opacity:0;pointer-events:none;transition:.18s}.replace-message.show{opacity:1}
+
+@media(max-width:900px){
+  .sidebar{position:relative;width:100%;min-height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .layout{display:block}.main{width:100%;margin-left:0;padding:15px}
+  .nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.nav button{text-align:center}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .form-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .main{padding:11px}.panel{padding:13px}.topbar{align-items:flex-start}.page-title{font-size:21px}.status{font-size:9px}
+  .content-head{align-items:flex-start;flex-direction:column}.content-head .btn{width:100%}
+  .nav{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{gap:8px}.stat-card{padding:13px}.stat-value{font-size:22px}
+  .editor-top{height:54px;padding:7px}.editor-btn{height:32px;padding:0 9px;font-size:10px}.editor-title span{display:none}
+  .editor-bottom{padding:7px}.search-group{min-width:100%;width:100%}.search-group input{height:34px}.editor-status{width:100%;margin-left:0}.replace-message{bottom:116px}
+}
+</style>
+</head>
+
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M16 34.5 24.5 43 48 19" stroke="#57e6a7" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 20h17" stroke="#72c8ff" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <div class="brand-title">Zone Mod</div>
+        <div class="brand-sub">Control & License System</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button type="button" id="navDashboard" class="active" onclick="showSection('dashboard')">داشبورد</button>
+      <button type="button" id="navLicenses" onclick="showSection('licenses')">لایسنس‌ها</button>
+      <button type="button" id="navContent" onclick="showSection('content')">محتوا</button>
+      <button type="button" id="navLogs" onclick="showSection('logs')">لاگ‌ها</button>
+    </nav>
+
+    <button type="button" class="logout" onclick="logout()">خروج</button>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">مدیریت سیستم</h1>
+        <div class="page-subtitle">License & Content Administration</div>
+      </div>
+      <div class="status">ADMIN</div>
+    </div>
+
+    <section id="section-dashboard">
+      <div class="stats">
+        <div class="stat-card"><div class="stat-title">کل لایسنس‌ها</div><div id="statTotal" class="stat-value">0</div></div>
+        <div class="stat-card"><div class="stat-title">لایسنس‌های فعال</div><div id="statActive" class="stat-value">0</div></div>
+        <div class="stat-card"><div class="stat-title">منقضی شده</div><div id="statExpired" class="stat-value">0</div></div>
+        <div class="stat-card"><div class="stat-title">لاگ‌های اخیر</div><div id="statLogs" class="stat-value">0</div></div>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">وضعیت سیستم</h2>
+        <div class="note">
+          Worker: <code>license-api.amyratfy8.workers.dev</code><br>
+          API: <span>Online / Protected</span><br>
+          JWT: <span>2 Hours</span><br>
+          Rate Limit: <span>10 Requests / Minute / IP</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-licenses" class="hidden">
+      <div class="panel">
+        <h2 class="panel-title">ساخت لایسنس جدید</h2>
+        <form id="createLicenseForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="ownerName">نام مالک</label>
+              <input id="ownerName" type="text" placeholder="مثلاً Ali" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label for="expiresDays">مدت اعتبار (روز)</label>
+              <input id="expiresDays" type="number" min="0" value="30" placeholder="30">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top:14px">ساخت License</button>
+          <div id="licenseMessage" class="message"></div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h2 class="panel-title" style="margin:0">لیست لایسنس‌ها</h2>
+          <button type="button" class="btn btn-secondary" onclick="loadLicenses();loadStats();">بروزرسانی</button>
+        </div>
+        <div class="table-wrap" style="margin-top:15px">
+          <table>
+            <thead><tr><th>ID</th><th>Token</th><th>Owner</th><th>Status</th><th>Expires</th><th>HWID</th><th>Requests</th><th>Action</th></tr></thead>
+            <tbody id="licensesTable"><tr><td colspan="8">در حال دریافت...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-content" class="hidden">
+      <div class="panel">
+        <h2 class="panel-title">مدیریت محتوا</h2>
+        <div class="panel-description">فقط محتوای اصلی با کلید <code>main</code> مدیریت می‌شود. متن داخل ویرایشگر حرفه‌ای نگهداری می‌شود و نسخه‌های قبلی پایین همین بخش ثبت می‌شوند.</div>
+
+        <div class="content-head">
+          <div class="content-head-main">
+            <div class="content-badge">M</div>
+            <div>
+              <div class="content-name">main</div>
+              <div class="content-sub">Primary client content</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn btn-secondary" onclick="loadContent()">دریافت محتوا</button>
+            <button type="button" class="btn btn-primary" onclick="openProfessionalEditor()">ویرایش کد حرفه‌ای</button>
+          </div>
+        </div>
+
+        <div class="content-meta" style="margin-top:11px">
+          <span class="meta-chip">کلید: <code>main</code></span>
+          <span class="meta-chip" id="contentSizeMeta">حجم: 0 B</span>
+          <span class="meta-chip" id="contentLinesMeta">خطوط: 0</span>
+          <span class="meta-chip" id="contentSavedMeta">آخرین ذخیره: —</span>
+        </div>
+
+        <textarea id="contentEditor" class="hidden" spellcheck="false"></textarea>
+        <div id="contentMessage" class="message"></div>
+
+        <div class="note">نسخه‌های قبلی روی همین مرورگر ثبت می‌شوند. با گزینه «باز کردن» می‌توانی همان نسخه را دوباره داخل ویرایشگر بیاوری، تغییر بدهی و ذخیره کنی.</div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div>
+            <h2 class="panel-title" style="margin:0">تاریخچه محتوا</h2>
+            <div class="panel-description" style="margin:5px 0 0">هر ذخیره یک نسخه در این مرورگر ثبت می‌کند.</div>
+          </div>
+          <button type="button" class="btn btn-ghost" onclick="clearContentHistory()">پاک کردن تاریخچه</button>
+        </div>
+        <div id="contentHistoryList" class="history-list"></div>
+      </div>
+    </section>
+
+    <section id="section-logs" class="hidden">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h2 class="panel-title" style="margin:0">System Logs</h2>
+          <button type="button" class="btn btn-secondary" onclick="loadLogs()">بروزرسانی لاگ‌ها</button>
+        </div>
+        <div class="table-wrap" style="margin-top:15px">
+          <table>
+            <thead><tr><th>ID</th><th>Token</th><th>IP</th><th>Action</th><th>Time</th><th>User Agent</th></tr></thead>
+            <tbody id="logsTable"><tr><td colspan="6">در حال دریافت...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Professional editor -->
+<div id="editorShell" class="editor-shell" aria-hidden="true">
+  <div class="editor-top">
+    <button id="editorUndo" type="button" class="editor-btn">برگشت</button>
+    <button id="editorRedo" type="button" class="editor-btn">بعد</button>
+    <div class="editor-title">
+      <strong>ویرایشگر کد</strong>
+      <span id="editorFileLabel">main</span>
+    </div>
+    <div class="top-spacer"></div>
+    <button id="editorClose" type="button" class="editor-btn">بستن</button>
+    <button id="editorSave" type="button" class="editor-btn editor-save">ذخیره</button>
+  </div>
+
+  <div class="editor-main">
+    <div class="code-wrap">
+      <textarea id="professionalEditorSource" spellcheck="false"></textarea>
+    </div>
+    <div id="replaceMessage" class="replace-message"></div>
+  </div>
+
+  <div class="editor-bottom">
+    <div class="search-group">
+      <input id="searchInput" class="search-input" type="text" placeholder="Search" autocomplete="off">
+      <button id="prevSearch" type="button" class="editor-btn search-btn">Prev</button>
+      <button id="nextSearch" type="button" class="editor-btn search-btn">Next</button>
+    </div>
+    <div class="search-group" style="flex:.85">
+      <input id="replaceInput" class="replace-input" type="text" placeholder="Replace" autocomplete="off">
+      <button id="replaceCurrent" type="button" class="editor-btn search-btn">Rep</button>
+    </div>
+    <div id="editorStatus" class="editor-status">Ln 1, Col 1</div>
+  </div>
+</div>
+
+<script>
+(async function(){
+  try{
+    if("serviceWorker" in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(r=>r.unregister()));
+    }
+    if("caches" in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.map(key=>caches.delete(key)));
+    }
+  }catch(e){console.warn("Cache cleanup failed:",e)}
+
+  const loadScript=(src)=>new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src=src;
+    s.async=false;
+    s.onload=resolve;
+    s.onerror=reject;
+    document.body.appendChild(s);
+  });
+
+  try{
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/lua/lua.min.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js");
+  }catch(e){
+    console.error("Code editor libraries failed to load:",e);
+  }
+
+  await loadScript("app.js?v="+Date.now());
+  initEnhancedDashboard();
+})();
+
+function initEnhancedDashboard(){
+  if(window.__enhancedDashboardReady)return;
+  window.__enhancedDashboardReady=true;
+
+  const source=document.getElementById("contentEditor");
+  const historyKey="zone_mod_content_history_v1";
+  let editor=null;
+  let currentKey="main";
+  let searchMarks=[];
+  let searchState={query:"",index:-1,from:0,to:0};
+
+  const $=(id)=>document.getElementById(id);
+
+  function bytes(n){
+    if(n<1024)return n+" B";
+    if(n<1024*1024)return (n/1024).toFixed(1)+" KB";
+    return (n/1024/1024).toFixed(2)+" MB";
+  }
+
+  function escapeHtml(v){
+    const d=document.createElement("div");d.textContent=String(v??"");return d.innerHTML;
+  }
+
+  function historyAll(){
+    try{return JSON.parse(localStorage.getItem(historyKey)||"[]")}catch{return []}
+  }
+  function historySave(list){localStorage.setItem(historyKey,JSON.stringify(list.slice(0,50)))}
+  function keyHistory(){return historyAll().filter(x=>x.key===currentKey)}
+
+  function addHistory(content, reason="ذخیره"){
+    const text=String(content||"");
+    if(!text.trim())return;
+    const list=historyAll();
+    const last=list[0];
+    if(last && last.key===currentKey && last.content===text)return;
+    list.unshift({id:Date.now()+Math.random().toString(16).slice(2),key:currentKey,content:text,time:Date.now(),reason});
+    historySave(list);
+    renderHistory();
+  }
+
+  function renderHistory(){
+    const host=$("contentHistoryList");
+    if(!host)return;
+    const list=keyHistory();
+    if(!list.length){host.innerHTML='<div class="empty">هنوز نسخه‌ای ثبت نشده است.</div>';return}
+    host.innerHTML=list.map((x,i)=>{
+      const date=new Date(x.time).toLocaleString("fa-IR");
+      const preview=x.content.length>900?x.content.slice(0,900)+"…":x.content;
+      return '<div class="history-item" data-id="'+escapeHtml(x.id)+'">'+
+        '<div class="history-row">'+
+          '<div class="history-left"><div class="history-title">نسخه '+(list.length-i)+'</div><div class="history-meta">'+escapeHtml(date)+' · '+escapeHtml(bytes(new Blob([x.content]).size))+' · '+escapeHtml(x.reason||"ذخیره")+'</div></div>'+
+          '<div class="history-actions">'+
+            '<button type="button" class="editor-btn history-toggle">مشاهده</button>'+
+            '<button type="button" class="editor-btn history-open">باز کردن</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="history-preview"><pre>'+escapeHtml(preview)+'</pre></div>'+
+      '</div>';
+    }).join("");
+
+    host.querySelectorAll(".history-item").forEach(item=>{
+      const id=item.dataset.id;
+      item.querySelector(".history-toggle").addEventListener("click",()=>item.classList.toggle("open"));
+      item.querySelector(".history-open").addEventListener("click",()=>{
+        const x=historyAll().find(v=>String(v.id)===String(id));
+        if(!x)return;
+        currentKey=x.key||"main";
+        source.value=x.content||"";
+        syncMeta(x.content||"");
+        openProfessionalEditor(x.content||"",true);
+      });
+    });
+  }
+
+  window.clearContentHistory=function(){
+    if(!confirm("تاریخچه همین Content پاک شود؟"))return;
+    const left=historyAll().filter(x=>x.key!==currentKey);historySave(left);renderHistory();
+  };
+
+  function syncMeta(text){
+    const val=String(text||"");
+    $("contentSizeMeta").textContent="حجم: "+bytes(new Blob([val]).size);
+    $("contentLinesMeta").textContent="خطوط: "+(val?val.split("\n").length:0);
+  }
+
+  function markLocal(modeEditor){
+    if(!modeEditor || !window.CodeMirror)return;
+    if(window.__localOverlay){
+      try{modeEditor.removeOverlay(window.__localOverlay)}catch{}
+    }
+    window.__localOverlay={
+      token(stream){
+        if(stream.match(/\blocal\b/))return "local-keyword";
+        stream.next();
+        return null;
+      },
+      name:"local-word-overlay"
+    };
+    modeEditor.addOverlay(window.__localOverlay);
+  }
+
+  function clearSearchMarks(){searchMarks.forEach(m=>m.clear());searchMarks=[]}
+
+  function runSearch(direction){
+    if(!editor || !window.CodeMirror)return;
+    const query=$("searchInput").value;
+    clearSearchMarks();
+    searchState.query=query;
+    if(!query){return}
+    const doc=editor.getDoc();
+    const total=doc.getValue().length;
+    let cursor;
+    if(direction>0){
+      cursor=doc.getSearchCursor(query,doc.indexFromPos(doc.getCursor()),false);
+      if(searchState.to>0 && doc.indexFromPos(doc.getCursor())===searchState.to){cursor=doc.getSearchCursor(query,doc.indexFromPos(doc.getCursor()),false)}
+      if(!cursor.findNext()){
+        cursor=doc.getSearchCursor(query,0,false);
+        if(!cursor.findNext()){return}
+      }
+    }else{
+      const pos=doc.getCursor();
+      let before=doc.indexFromPos(pos);
+      if(searchState.from===before)before=Math.max(0,before-1);
+      cursor=doc.getSearchCursor(query,Math.max(0,before),false);
+      let last=null;
+      while(cursor.findNext()){
+        if(doc.indexFromPos(cursor.from())>=before)break;
+        last={from:cursor.from(),to:cursor.to()};
+      }
+      if(last){doc.setSelection(last.from,last.to);searchState.from=doc.indexFromPos(last.from);searchState.to=doc.indexFromPos(last.to);return}
+      cursor=doc.getSearchCursor(query,Math.max(0,total),false);
+      let prev=null;
+      while(cursor.findNext()){prev={from:cursor.from(),to:cursor.to()};}
+      if(!prev)return;
+      doc.setSelection(prev.from,prev.to);searchState.from=doc.indexFromPos(prev.from);searchState.to=doc.indexFromPos(prev.to);return;
+    }
+    doc.setSelection(cursor.from(),cursor.to());
+    searchState.from=doc.indexFromPos(cursor.from());
+    searchState.to=doc.indexFromPos(cursor.to());
+    editor.scrollIntoView({from:cursor.from(),to:cursor.to()},120);
+  }
+
+  function replaceCurrent(){
+    if(!editor)return;
+    const query=$("searchInput").value;
+    const repl=$("replaceInput").value;
+    const doc=editor.getDoc();
+    const from=doc.getCursor("from");
+    const to=doc.getCursor("to");
+    const selected=doc.getRange(from,to);
+    if(query && selected===query){
+      editor.replaceSelection(repl,"+input");
+      flashMessage("جایگزین شد");
+      runSearch(1);
+      return;
+    }
+    runSearch(1);
+    const from2=doc.getCursor("from");
+    const to2=doc.getCursor("to");
+    if(query && doc.getRange(from2,to2)===query){
+      editor.replaceSelection(repl,"+input");
+      flashMessage("جایگزین شد");
+      runSearch(1);
+    }else{
+      flashMessage("موردی پیدا نشد");
+    }
+  }
+
+  function flashMessage(msg){
+    const box=$("replaceMessage");box.textContent=msg;box.classList.add("show");setTimeout(()=>box.classList.remove("show"),900);
+  }
+
+  function updateEditorStatus(){
+    if(!editor)return;
+    const c=editor.getCursor();
+    $("editorStatus").textContent="Ln "+(c.line+1)+", Col "+(c.ch+1);
+    syncMeta(editor.getValue());
+  }
+
+  function createEditor(){
+    if(editor || !window.CodeMirror)return;
+    editor=CodeMirror.fromTextArea($("professionalEditorSource"),{
+      mode:"text/x-lua",
+      theme:"material-darker",
+      lineNumbers:true,
+      lineWrapping:false,
+      tabSize:2,
+      indentUnit:2,
+      indentWithTabs:false,
+      autofocus:false,
+      viewportMargin:Infinity,
+      extraKeys:{
+        "Ctrl-S":()=>saveFromEditor(),
+        "Cmd-S":()=>saveFromEditor(),
+        "Ctrl-Z":cm=>cm.undo(),
+        "Cmd-Z":cm=>cm.undo(),
+        "Ctrl-Y":cm=>cm.redo(),
+        "Cmd-Y":cm=>cm.redo(),
+        "Ctrl-F":()=>$("searchInput").focus(),
+        "Cmd-F":()=>$("searchInput").focus()
+      }
+    });
+    editor.on("cursorActivity",updateEditorStatus);
+    editor.on("change",updateEditorStatus);
+    markLocal(editor);
+
+    $("editorUndo").onclick=()=>editor.undo();
+    $("editorRedo").onclick=()=>editor.redo();
+    $("prevSearch").onclick=()=>runSearch(-1);
+    $("nextSearch").onclick=()=>runSearch(1);
+    $("replaceCurrent").onclick=replaceCurrent;
+    $("searchInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();runSearch(e.shiftKey?-1:1)}});
+    $("replaceInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();replaceCurrent()}});
+    $("editorSave").onclick=saveFromEditor;
+    $("editorClose").onclick=closeProfessionalEditor;
+  }
+
+  async function saveFromEditor(){
+    if(!editor)return;
+    source.value=editor.getValue();
+    const before=source.value;
+    try{
+      await window.__originalSaveContent();
+      addHistory(before,"ذخیره");
+      $("contentSavedMeta").textContent="آخرین ذخیره: "+new Date().toLocaleString("fa-IR");
+      syncMeta(before);
+      flashMessage("ذخیره شد");
+    }catch(e){
+      flashMessage(e.message||"خطا در ذخیره");
+    }
+  }
+
+  window.openProfessionalEditor=async function(prefill="",fromHistory=false){
+    createEditor();
+    if(!editor){alert("کتابخانه ویرایشگر بارگذاری نشد.");return}
+    currentKey="main";
+    $("editorFileLabel").textContent=currentKey;
+    $("editorShell").classList.add("open");
+    $("editorShell").setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+
+    if(fromHistory){
+      editor.setValue(prefill||"");
+    }else{
+      try{
+        await window.__originalLoadContent();
+        editor.setValue(source.value||"");
+      }catch(e){
+        editor.setValue(source.value||"");
+      }
+    }
+    editor.clearHistory();
+    updateEditorStatus();
+    editor.refresh();
+    editor.focus();
+    renderHistory();
+  };
+
+  function closeProfessionalEditor(){
+    if(!editor)return;
+    source.value=editor.getValue();
+    $("editorShell").classList.remove("open");
+    $("editorShell").setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+    clearSearchMarks();
+  }
+
+  window.__originalLoadContent=window.loadContent;
+  window.__originalSaveContent=window.saveContent;
+
+  window.loadContent=async function(){
+    try{
+      await window.__originalLoadContent();
+      currentKey="main";
+      syncMeta(source.value||"");
+      renderHistory();
+    }catch(e){throw e}
+  };
+
+  window.saveContent=async function(){
+    if(editor && $("editorShell").classList.contains("open")){
+      await saveFromEditor();
+      return;
+    }
+    await window.__originalSaveContent();
+    addHistory(source.value||"","ذخیره");
+    $("contentSavedMeta").textContent="آخرین ذخیره: "+new Date().toLocaleString("fa-IR");
+    syncMeta(source.value||"");
+  };
+
+  const originalShowSection=window.showSection;
+  window.showSection=function(name){
+    originalShowSection(name);
+    for(const n of ["dashboard","licenses","content","logs"]){
+      const btn=document.getElementById("nav"+n.charAt(0).toUpperCase()+n.slice(1));
+      if(btn)btn.classList.toggle("active",n===name);
+    }
+    if(name==="content"){
+      currentKey="main";
+      renderHistory();
+      syncMeta(source.value||"");
+    }
+  };
+
+  /* Add copy buttons to tokens produced by app.js without editing app.js. */
+  const licenseTable=$("licensesTable");
+  if(licenseTable){
+    const decorate=()=>{
+      licenseTable.querySelectorAll("tr").forEach(row=>{
+        const cell=row.querySelector(".token-cell");
+        const code=cell?.querySelector("code");
+        if(!cell || !code || cell.querySelector(".copy-btn"))return;
+        const wrap=document.createElement("span");wrap.className="token-actions";
+        const btn=document.createElement("button");btn.type="button";btn.className="copy-btn";btn.textContent="کپی";
+        btn.onclick=async()=>{
+          try{
+            await navigator.clipboard.writeText(code.textContent||"");
+            btn.textContent="کپی شد";
+            setTimeout(()=>btn.textContent="کپی",900);
+          }catch{btn.textContent="خطا";setTimeout(()=>btn.textContent="کپی",900)}
+        };
+        wrap.appendChild(btn);cell.appendChild(wrap);
+      });
+    };
+    new MutationObserver(decorate).observe(licenseTable,{childList:true,subtree:true});
+    decorate();
+  }
+
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape" && $("editorShell").classList.contains("open"))closeProfessionalEditor();
+  });
+
+  renderHistory();
+  syncMeta(source.value||"");
+}
+</script>
+</body>
+</html>
