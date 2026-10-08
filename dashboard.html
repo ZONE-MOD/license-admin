@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>License Admin Dashboard</title>
+
+    <link rel="stylesheet"
+          href="styles.css">
+
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        LICENSE ADMIN
+    </div>
+
+    <nav>
+
+        <button onclick="showSection('dashboard')">
+            داشبورد
+        </button>
+
+        <button onclick="showSection('licenses')">
+            لایسنس‌ها
+        </button>
+
+        <button onclick="showSection('content')">
+            محتوا
+        </button>
+
+        <button onclick="showSection('logs')">
+            لاگ
+        </button>
+
+        <button onclick="logout()"
+                class="danger-btn">
+            خروج
+        </button>
+
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+
+    <!-- DASHBOARD -->
+
+    <section id="section-dashboard">
+
+        <div class="section-header">
+
+            <h1>
+                داشبورد
+            </h1>
+
+            <button onclick="loadAll()">
+                بروزرسانی
+            </button>
+
+        </div>
+
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <span>فعال</span>
+                <strong id="statActive">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>کل</span>
+                <strong id="statTotal">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>منقضی</span>
+                <strong id="statExpired">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>لاگ</span>
+                <strong id="statLogs">0</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- LICENSES -->
+
+    <section id="section-licenses"
+             class="hidden">
+
+        <div class="section-header">
+
+            <h2>
+                مدیریت لایسنس‌ها
+            </h2>
+
+        </div>
+
+
+        <div class="panel">
+
+            <h3>
+                ساخت لایسنس جدید
+            </h3>
+
+            <form id="createLicenseForm">
+
+                <label>
+                    نام مالک
+                </label>
+
+                <input
+                    id="ownerName"
+                    type="text"
+                    placeholder="مثلاً Ali"
+                    required
+                >
+
+
+                <label>
+                    مدت اعتبار به روز
+                </label>
+
+                <input
+                    id="expiresDays"
+                    type="number"
+                    min="0"
+                    value="30"
+                    required
+                >
+
+                <small>
+                    عدد 0 یعنی بدون انقضا
+                </small>
+
+
+                <button type="submit"
+                        class="primary-btn">
+
+                    ساخت لایسنس
+
+                </button>
+
+            </form>
+
+            <div id="licenseMessage"
+                 class="message">
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <h3>
+                لیست لایسنس‌ها
+            </h3>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Token</th>
+                        <th>مالک</th>
+                        <th>وضعیت</th>
+                        <th>انقضا</th>
+                        <th>HWID</th>
+                        <th>درخواست</th>
+                        <th>عملیات</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="licensesTable">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CONTENT -->
+
+    <section id="section-content"
+             class="hidden">
+
+        <div class="section-header">
+
+            <h2>
+                مدیریت محتوا
+            </h2>
+
+        </div>
+
+
+        <div class="panel">
+
+            <label>
+                کلید محتوا
+            </label>
+
+            <input
+                id="contentKey"
+                type="text"
+                value="main"
+                placeholder="main"
+            >
+
+
+            <button onclick="loadContent()">
+                دریافت محتوا
+            </button>
+
+
+            <label>
+                محتوا
+            </label>
+
+            <textarea
+                id="contentEditor"
+                class="content-editor"
+                placeholder="محتوای متنی را اینجا وارد کنید..."
+            ></textarea>
+
+
+            <button
+                onclick="saveContent()"
+                class="primary-btn">
+
+                ذخیره محتوا
+
+            </button>
+
+
+            <div id="contentMessage"
+                 class="message">
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- LOGS -->
+
+    <section id="section-logs"
+             class="hidden">
+
+        <div class="section-header">
+
+            <h2>
+                لاگ‌ها
+            </h2>
+
+            <button onclick="loadLogs()">
+                بروزرسانی
+            </button>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Token</th>
+                        <th>IP</th>
+                        <th>Action</th>
+                        <th>Time</th>
+                        <th>User Agent</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="logsTable">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="app.js"></script>
+
+</body>
+
+</html>
