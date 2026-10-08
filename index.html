@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>License Admin - Login</title>
+
+    <link rel="stylesheet"
+          href="styles.css">
+</head>
+
+<body class="login-page">
+
+    <main class="login-card">
+
+        <div class="logo">
+            LICENSE ADMIN
+        </div>
+
+        <h1>ورود مدیر</h1>
+
+        <p class="muted">
+            برای ورود، رمز عبور مدیر را وارد کنید.
+        </p>
+
+        <form id="loginForm">
+
+            <label for="password">
+                رمز عبور
+            </label>
+
+            <input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="رمز عبور"
+                required
+            >
+
+            <button type="submit"
+                    class="primary-btn">
+                ورود
+            </button>
+
+        </form>
+
+        <div id="loginMessage"
+             class="message">
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
